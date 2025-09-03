@@ -86,88 +86,193 @@ export default function ClientDetailPage() {
     fetchClient();
   }, [clientId]);
 
-  if (loading) return <p className="p-6 text-center">Loading client details...</p>;
-  if (error) return <p className="p-6 text-center text-red-500">{error}</p>;
-  if (!client) return <p className="p-6 text-center text-gray-500">Client not found.</p>;
+  if (loading) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto">
+        <div className="animate-pulse space-y-6">
+          <div className="h-10 w-64 bg-gray-200 rounded-lg" />
+          <div className="h-28 bg-gray-200 rounded-2xl" />
+          <div className="h-40 bg-gray-200 rounded-2xl" />
+          <div className="h-40 bg-gray-200 rounded-2xl" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 max-w-2xl mx-auto">
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700 shadow">
+          <div className="text-lg font-semibold mb-1">Something went wrong</div>
+          <p className="text-red-600">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!client) {
+    return (
+      <div className="p-6 max-w-2xl mx-auto">
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 text-gray-600 shadow">
+          Client not found.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-8">
-
-      {/* Client Info */}
-      <div className="bg-white shadow-xl rounded-2xl p-6 border border-gray-200">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center">
-          <h1 className="text-3xl font-bold mb-4 md:mb-0">{client.firstName} {client.lastName}</h1>
+      {/* Header / Title */}
+      <div className="relative overflow-hidden rounded-3xl border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-6 shadow-sm">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-gray-900">
+              {client.firstName} {client.lastName}
+            </h1>
+            <p className="mt-1 text-sm text-gray-500">
+              Client ID:&nbsp;
+              <span className="font-mono text-gray-700">{client._id}</span>
+            </p>
+          </div>
           <span
-            className={`px-4 py-1 rounded-full font-semibold text-sm ${
-              client.status === "Active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-            }`}
+            className={[
+              "inline-flex items-center justify-center rounded-full px-4 py-1.5 text-sm font-semibold shadow-sm",
+              client.status === "Active"
+                ? "bg-emerald-100 text-emerald-800 ring-1 ring-inset ring-emerald-200"
+                : "bg-rose-100 text-rose-800 ring-1 ring-inset ring-rose-200",
+            ].join(" ")}
           >
             {client.status}
           </span>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 text-gray-700">
-          <p><span className="font-semibold">Email:</span> {client.email}</p>
-          <p><span className="font-semibold">ID Number:</span> {client.idNumber}</p>
-          <p><span className="font-semibold">DOB:</span> {client.dob}</p>
-          <p><span className="font-semibold">Address:</span> {client.street}, {client.suburb}, {client.city}</p>
-          <p><span className="font-semibold">Insurance Type:</span> {client.insuranceType}</p>
-          <p><span className="font-semibold">Tow Needed:</span> {client.towNeeded}</p>
-          <p><span className="font-semibold">Created At:</span> {new Date(client.createdAt).toLocaleString()}</p>
-          <p><span className="font-semibold">Updated At:</span> {new Date(client.updatedAt).toLocaleString()}</p>
+
+        <div className="mt-6 grid grid-cols-1 gap-4 text-sm text-gray-700 md:grid-cols-2">
+          <div className="rounded-2xl bg-white/70 p-4 ring-1 ring-gray-200">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <p><span className="text-gray-500">Email:</span> <span className="font-medium">{client.email}</span></p>
+              <p><span className="text-gray-500">ID Number:</span> <span className="font-medium">{client.idNumber}</span></p>
+              <p><span className="text-gray-500">DOB:</span> <span className="font-medium">{client.dob}</span></p>
+              <p className="sm:col-span-2">
+                <span className="text-gray-500">Address:</span>{" "}
+                <span className="font-medium">{client.street}, {client.suburb}, {client.city}</span>
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-white/70 p-4 ring-1 ring-gray-200">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <p><span className="text-gray-500">Insurance Type:</span> <span className="font-medium">{client.insuranceType}</span></p>
+              <p><span className="text-gray-500">Tow Needed:</span> <span className="font-medium">{client.towNeeded}</span></p>
+              <p><span className="text-gray-500">Created:</span> <span className="font-medium">{new Date(client.createdAt).toLocaleString()}</span></p>
+              <p><span className="text-gray-500">Updated:</span> <span className="font-medium">{new Date(client.updatedAt).toLocaleString()}</span></p>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Vehicles */}
-      <div className="bg-white shadow-xl rounded-2xl p-6 border border-gray-200">
-        <h2 className="text-2xl font-semibold mb-4">Vehicles</h2>
+      <section className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900">Vehicles</h2>
+          <span className="text-sm text-gray-500">{client.vehicles.length} total</span>
+        </div>
+
         {client.vehicles.length === 0 ? (
-          <p className="text-gray-500">No vehicles added.</p>
+          <div className="rounded-xl border border-dashed border-gray-300 p-8 text-center text-gray-500">
+            No vehicles added.
+          </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {client.vehicles.map((v, idx) => (
-              <div key={idx} className="border rounded-xl p-4 bg-gray-50 hover:bg-gray-100 transition">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-gray-700">
-                  <p><span className="font-semibold">Registration:</span> {v.registration}</p>
-                  <p><span className="font-semibold">VIN:</span> {v.vin}</p>
-                  <p><span className="font-semibold">Engine No:</span> {v.engineNo}</p>
-                  <p><span className="font-semibold">Make / Model:</span> {v.make} / {v.modelName}</p>
-                  <p><span className="font-semibold">Odometer:</span> {v.odometer}</p>
-                  <p><span className="font-semibold">Colour:</span> {v.colour}</p>
-                  <p><span className="font-semibold">Booking Date:</span> {v.bookingDate}</p>
-                  <p><span className="font-semibold">Quote Date:</span> {v.quoteDate}</p>
+              <div
+                key={idx}
+                className="group rounded-2xl border border-gray-200 bg-gradient-to-br from-gray-50 to-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              >
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="font-semibold text-gray-900">
+                    {v.make} <span className="text-gray-500">/</span> {v.modelName}
+                  </div>
+                  <span className="rounded-full bg-gray-100 px-3 py-0.5 text-xs font-medium text-gray-700">
+                    {v.colour || "—"}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 gap-2 text-sm text-gray-700">
+                  <p><span className="text-gray-500">Registration:</span> <span className="font-medium">{v.registration || "—"}</span></p>
+                  <p className="truncate"><span className="text-gray-500">VIN:</span> <span className="font-medium">{v.vin || "—"}</span></p>
+                  <p><span className="text-gray-500">Engine No:</span> <span className="font-medium">{v.engineNo || "—"}</span></p>
+                  <p><span className="text-gray-500">Odometer:</span> <span className="font-medium">{v.odometer || "—"}</span></p>
+                  <div className="mt-1 grid grid-cols-2 gap-2">
+                    <div className="rounded-lg bg-white p-2 ring-1 ring-gray-200">
+                      <p className="text-[11px] text-gray-500">Booking Date</p>
+                      <p className="text-sm font-medium text-gray-800">{v.bookingDate || "—"}</p>
+                    </div>
+                    <div className="rounded-lg bg-white p-2 ring-1 ring-gray-200">
+                      <p className="text-[11px] text-gray-500">Quote Date</p>
+                      <p className="text-sm font-medium text-gray-800">{v.quoteDate || "—"}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         )}
-      </div>
+      </section>
 
       {/* Insurance */}
       {client.insurance && (
-        <div className="bg-white shadow-xl rounded-2xl p-6 border border-gray-200">
-          <h2 className="text-2xl font-semibold mb-4">Insurance</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
-            {Object.entries(client.insurance).map(([key, value]) => (
-              key !== "_id" && key !== "clientId" && key !== "__v" && key !== "createdAt" && key !== "updatedAt" ? (
-                <p key={key}><span className="font-semibold">{key.replace(/([A-Z])/g, " $1")}: </span>{value}</p>
+        <section className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-5 text-xl md:text-2xl font-bold text-gray-900">Insurance</h2>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {Object.entries(client.insurance).map(([key, value]) =>
+              key !== "_id" &&
+              key !== "clientId" &&
+              key !== "__v" &&
+              key !== "createdAt" &&
+              key !== "updatedAt" ? (
+                <div
+                  key={key}
+                  className="rounded-xl bg-gradient-to-br from-gray-50 to-white p-4 ring-1 ring-gray-200"
+                >
+                  <p className="text-[11px] uppercase tracking-wide text-gray-500">
+                    {key.replace(/([A-Z])/g, " $1")}
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-gray-800">
+                    {String(value) || "—"}
+                  </p>
+                </div>
               ) : null
-            ))}
+            )}
           </div>
-        </div>
+        </section>
       )}
 
       {/* Tow */}
       {client.tow && (
-        <div className="bg-white shadow-xl rounded-2xl p-6 border border-gray-200">
-          <h2 className="text-2xl font-semibold mb-4">Tow Details</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
-            {Object.entries(client.tow).map(([key, value]) => (
-              key !== "_id" && key !== "clientId" && key !== "__v" && key !== "createdAt" && key !== "updatedAt" ? (
-                <p key={key}><span className="font-semibold">{key.replace(/([A-Z])/g, " $1")}: </span>{value}</p>
+        <section className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-5 text-xl md:text-2xl font-bold text-gray-900">Tow Details</h2>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {Object.entries(client.tow).map(([key, value]) =>
+              key !== "_id" &&
+              key !== "clientId" &&
+              key !== "__v" &&
+              key !== "createdAt" &&
+              key !== "updatedAt" ? (
+                <div
+                  key={key}
+                  className="rounded-xl bg-gradient-to-br from-gray-50 to-white p-4 ring-1 ring-gray-200"
+                >
+                  <p className="text-[11px] uppercase tracking-wide text-gray-500">
+                    {key.replace(/([A-Z])/g, " $1")}
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-gray-800">
+                    {String(value) || "—"}
+                  </p>
+                </div>
               ) : null
-            ))}
+            )}
           </div>
-        </div>
+        </section>
       )}
     </div>
   );

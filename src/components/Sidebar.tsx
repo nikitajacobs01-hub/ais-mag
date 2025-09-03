@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import {
   UserIcon,
@@ -26,12 +26,13 @@ const menuItems = [
   {
     name: "Logout",
     icon: ArrowRightOnRectangleIcon,
-    path: "/dashboard/logout",
+    path: "/dashboard/logout", // we'll handle this manually
   },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [clientsOpen, setClientsOpen] = useState(false);
 
@@ -43,6 +44,11 @@ export default function Sidebar() {
       setClientsOpen(false);
     }
   }, [pathname]);
+
+  const handleLogout = () => {
+    localStorage.clear(); // clear all storage
+    router.push("/"); // navigate to homepage
+  };
 
   return (
     <aside
@@ -79,6 +85,20 @@ export default function Sidebar() {
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname.startsWith(item.path);
+
+            // Handle Logout separately
+            if (item.name === "Logout") {
+              return (
+                <button
+                  key={item.name}
+                  onClick={handleLogout}
+                  className="flex items-center gap-3 p-2 w-full rounded hover:bg-white/10 transition"
+                >
+                  <Icon className="h-6 w-6" />
+                  {sidebarOpen && <span>{item.name}</span>}
+                </button>
+              );
+            }
 
             // If item has submenu
             if (item.submenu) {

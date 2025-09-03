@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import api from "../../../../lib/api";
 import {
   ClientCreateInput,
@@ -11,8 +12,14 @@ import {
 import { AxiosError } from "axios";
 
 export default function CreateClientPage() {
+  const router = useRouter();
+
   const [message, setMessage] = useState("");
   const [step, setStep] = useState(1);
+
+  // ✅ NEW: success modal state
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successText, setSuccessText] = useState("✅ Client with all details added successfully!");
 
   const [form, setForm] = useState<ClientCreateInput>({
     firstName: "",
@@ -82,7 +89,12 @@ export default function CreateClientPage() {
     e.preventDefault();
     try {
       await api.post("/api/clients", form);
-      setMessage("✅ Client with all details added successfully!");
+      const successMsg = "✅ Client with all details added successfully!";
+      setMessage(successMsg);
+
+      // ✅ NEW: show modal + message
+      setSuccessText(successMsg);
+      setShowSuccess(true);
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
         setMessage(error.response?.data?.error || "❌ Failed to add client");
@@ -100,9 +112,18 @@ export default function CreateClientPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-200 flex flex-col items-center py-8 px-4">
       <div className="w-full max-w-5xl">
-        <h1 className="text-4xl font-extrabold mb-6 text-center text-gray-800">
-          Create New Client
-        </h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-4xl font-extrabold text-gray-800">Create New Client</h1>
+
+          {/* ✅ NEW: Navigate to Clients List button */}
+          <button
+            type="button"
+            onClick={() => router.push("/dashboard/clients/list")}
+            className="px-5 py-2.5 bg-gray-900 text-white rounded-lg shadow hover:bg-gray-800 transition"
+          >
+            Clients List
+          </button>
+        </div>
 
         {message && (
           <div
@@ -322,6 +343,29 @@ export default function CreateClientPage() {
           </div>
         </form>
       </div>
+
+      {/* ✅ NEW: Success Modal */}
+      {showSuccess && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-[1px] flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <div className="text-center">
+              <div className="mx-auto mb-3 w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                <span className="text-2xl">✅</span>
+              </div>
+              <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                Success
+              </h2>
+              <p className="text-gray-600 mb-6">{successText}</p>
+              <button
+                onClick={() => router.push("/dashboard/clients/list")}
+                className="px-6 py-2.5 bg-green-600 text-white rounded-lg shadow hover:bg-green-500 transition"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
