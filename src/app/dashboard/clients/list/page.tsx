@@ -62,7 +62,6 @@ export default function ClientsListPage() {
       setError("");
       try {
         const res = await api.get("/api/clients");
-        console.log("Res Data:", res.data);
         setClients(res.data);
         setFilteredClients(res.data);
       } catch (err: unknown) {
