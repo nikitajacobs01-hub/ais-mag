@@ -39,12 +39,14 @@ export interface ClientCreateInput {
   idNumber: string;
   dob: string;
   email: string;
+  cellphone: string;
   street: string;
   suburb: string;
   city: string;
-  vehicles?: VehicleInput[];
-  insuranceType?: string;
-  insurance?: InsuranceInput;
-  towNeeded?: string;
-  tow?: TowInput;
+  branch: string;
+  vehicles: VehicleInput[];
+  insuranceType: string;
+  insurance: InsuranceInput;
+  towNeeded: string;
+  tow: TowInput;
 }

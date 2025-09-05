@@ -19,7 +19,16 @@ export default function CreateClientPage() {
 
   // ✅ NEW: success modal state
   const [showSuccess, setShowSuccess] = useState(false);
-  const [successText, setSuccessText] = useState("✅ Client with all details added successfully!");
+  const [successText, setSuccessText] = useState(
+    "✅ Client with all details added successfully!"
+  );
+
+  //Regex patterns
+  const EmailRegex = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/;
+  const IdNumberRegex =
+    /^([0-9]{2})(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])[0-9]{4}[01][8][0-9]$/;
+  const PhoneRegex =
+    /^(?:\+27|0|(?:\s?\+27)\s?)(?:\d{2}[-.\s]?\d{3}[-.\s]?\d{4})$/;
 
   const [form, setForm] = useState<ClientCreateInput>({
     firstName: "",
@@ -27,9 +36,11 @@ export default function CreateClientPage() {
     idNumber: "",
     dob: "",
     email: "",
+    cellphone: "", // ✅ added
     street: "",
     suburb: "",
     city: "",
+    branch: "", // ✅ added
     vehicles: [
       {
         registration: "",
@@ -66,6 +77,12 @@ export default function CreateClientPage() {
       towingFee: "",
     },
   });
+  const branches = [
+    "MAG Selby",
+    "MAG The Glen",
+    "MAG Longmeadow",
+    "MAG Pretoria",
+  ];
 
   const updateNested = <T extends object>(
     section: keyof ClientCreateInput,
@@ -113,7 +130,9 @@ export default function CreateClientPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-200 flex flex-col items-center py-8 px-4">
       <div className="w-full max-w-5xl">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-4xl font-extrabold text-gray-800">Create New Client</h1>
+          <h1 className="text-4xl font-extrabold text-gray-800">
+            Create New Client
+          </h1>
 
           {/* ✅ NEW: Navigate to Clients List button */}
           <button
@@ -158,7 +177,9 @@ export default function CreateClientPage() {
           <div className="relative w-full h-3 bg-gray-200 rounded-full overflow-hidden">
             <div
               className="absolute h-full bg-blue-600 transition-all"
-              style={{ width: `${((step - 1) / (stepLabels.length - 1)) * 100}%` }}
+              style={{
+                width: `${((step - 1) / (stepLabels.length - 1)) * 100}%`,
+              }}
             />
           </div>
         </div>
@@ -178,55 +199,207 @@ export default function CreateClientPage() {
                   "idNumber",
                   "dob",
                   "email",
+                  "cellphone",
                   "street",
                   "suburb",
                   "city",
+                  "branch",
                 ] as const
-              ).map((field) => (
-                <div key={field}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {field.charAt(0).toUpperCase() + field.slice(1)}
-                  </label>
-                  <input
-                    type={field === "dob" ? "date" : "text"}
-                    value={form[field]}
-                    onChange={(e) =>
-                      setForm({ ...form, [field]: e.target.value })
-                    }
-                    className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  />
-                </div>
-              ))}
+              ).map((field) => {
+                const labelMap: Record<string, string> = {
+                  firstName: "First Name",
+                  lastName: "Last Name",
+                  idNumber: "ID Number",
+                  dob: "Date of Birth",
+                  email: "Email Address",
+                  cellphone: "Cellphone Number",
+                  street: "Street",
+                  suburb: "Suburb",
+                  city: "City",
+                  branch: "Select Branch",
+                };
+
+                const placeholderMap: Record<string, string> = {
+                  firstName: "Enter First Name",
+                  lastName: "Enter Last Name",
+                  idNumber: "Enter 13-digit ID Number",
+                  dob: "yyyy/mm/dd",
+                  email: "Enter Email Address",
+                  cellphone: "Enter Cellphone Number",
+                  street: "Enter Street",
+                  suburb: "Enter Suburb",
+                  city: "Enter City",
+                  branch: "Choose Branch",
+                };
+
+                const isEmail = field === "email";
+                const isId = field === "idNumber";
+                const isPhone = field === "cellphone";
+
+                return (
+                  <div key={field}>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {labelMap[field]}
+                    </label>
+
+                    {field === "dob" ? (
+                      <input
+                        type="date"
+                        placeholder={placeholderMap[field]}
+                        value={form[field] ?? ""}
+                        onChange={(e) =>
+                          setForm({ ...form, [field]: e.target.value })
+                        }
+                        className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      />
+                    ) : field === "branch" ? (
+                      <select
+                        value={form[field] ?? ""}
+                        onChange={(e) =>
+                          setForm({ ...form, [field]: e.target.value })
+                        }
+                        className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      >
+                        <option value="">{placeholderMap[field]}</option>
+                        {branches.map((branch) => (
+                          <option key={branch} value={branch}>
+                            {branch}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type={isEmail ? "email" : "text"}
+                        placeholder={placeholderMap[field]}
+                        value={form[field] ?? ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          // ✅ inline regex validation
+                          if (isEmail && value && !EmailRegex.test(value)) {
+                            console.warn("Invalid email format");
+                          }
+                          if (isId && value && !IdNumberRegex.test(value)) {
+                            console.warn("Invalid ID number");
+                          }
+                          if (isPhone && value && !PhoneRegex.test(value)) {
+                            console.warn("Invalid cellphone number");
+                          }
+                          setForm({ ...form, [field]: value });
+                        }}
+                        className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
-
           {/* Step 2: Vehicle */}
           {step === 2 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {(Object.keys(form.vehicles?.[0] ?? {}) as (keyof VehicleInput)[]).map(
-                (key) => (
+              {(
+                Object.keys(form.vehicles?.[0] ?? {}) as (keyof VehicleInput)[]
+              ).map((key) => {
+                // Human-readable labels
+                const labelMap: Record<string, string> = {
+                  registration: "Registration Number",
+                  vin: "VIN",
+                  engineNo: "Engine Number",
+                  make: "Make",
+                  modelName: "Model Name",
+                  odometer: "Odometer Reading",
+                  colour: "Colour",
+                  bookingDate: "Booking Date",
+                  quoteDate: "Quote Date",
+                };
+
+                // Required fields
+                const requiredFields: (keyof VehicleInput)[] = [
+                  "registration",
+                  "engineNo",
+                  "modelName",
+                ];
+
+                // Dropdown for Make
+                const carMakes = [
+                  "Toyota",
+                  "Volkswagen",
+                  "BMW",
+                  "Mercedes-Benz",
+                  "Audi",
+                  "Ford",
+                  "Nissan",
+                  "Hyundai",
+                  "Kia",
+                  "Mazda",
+                  "Honda",
+                  "Chevrolet",
+                  "Suzuki",
+                  "Renault",
+                  "Land Rover",
+                  "Jeep",
+                  "Volvo",
+                ];
+
+                // Check if field is a date type
+                const isDateField =
+                  key === "bookingDate" || key === "quoteDate";
+
+                return (
                   <div key={key}>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {key.charAt(0).toUpperCase() + key.slice(1)}
+                      {labelMap[key] ?? key}
                     </label>
-                    <input
-                      value={form.vehicles?.[0]?.[key] ?? ""}
-                      onChange={(e) =>
-                        updateNested<VehicleInput>("vehicles", key, e.target.value, 0)
-                      }
-                      className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    />
+
+                    {key === "make" ? (
+                      <select
+                        value={form.vehicles?.[0]?.[key] ?? ""}
+                        onChange={(e) =>
+                          updateNested<VehicleInput>(
+                            "vehicles",
+                            key,
+                            e.target.value,
+                            0
+                          )
+                        }
+                        required={requiredFields.includes(key)}
+                        className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      >
+                        <option value="">Select Make</option>
+                        {carMakes.map((make) => (
+                          <option key={make} value={make}>
+                            {make}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type={isDateField ? "date" : "text"}
+                        placeholder={`Enter ${labelMap[key] ?? key}`}
+                        value={form.vehicles?.[0]?.[key] ?? ""}
+                        onChange={(e) =>
+                          updateNested<VehicleInput>(
+                            "vehicles",
+                            key,
+                            e.target.value,
+                            0
+                          )
+                        }
+                        required={requiredFields.includes(key)}
+                        className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      />
+                    )}
                   </div>
-                )
-              )}
+                );
+              })}
             </div>
           )}
-
           {/* Step 3: Insurance */}
           {step === 3 && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Insurance Type */}
+              <div className="col-span-1 md:col-span-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Insurance Type
                 </label>
                 <select
@@ -234,45 +407,142 @@ export default function CreateClientPage() {
                   onChange={(e) =>
                     setForm({ ...form, insuranceType: e.target.value })
                   }
-                  className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none mb-6"
+                  className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm hover:border-gray-400 transition"
                 >
                   <option value="private">Private</option>
                   <option value="insurance">Insurance</option>
                 </select>
               </div>
 
-              {form.insuranceType === "insurance" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {(Object.keys(form.insurance ?? {}) as (keyof InsuranceInput)[]).map(
-                    (key) => (
+              {/* Warranty Status */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Warranty Status
+                  <span className="text-red-500 ml-1">*</span>
+                </label>
+                <select
+                  value={form.insurance?.warrantyStatus ?? ""}
+                  onChange={(e) =>
+                    updateNested<InsuranceInput>(
+                      "insurance",
+                      "warrantyStatus",
+                      e.target.value
+                    )
+                  }
+                  className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm hover:border-gray-400 transition"
+                >
+                  <option value="">Select Warranty Status</option>
+                  <option value="In Warranty">In Warranty</option>
+                  <option value="Out of Warranty">Out of Warranty</option>
+                </select>
+              </div>
+
+              {/* Condition Status */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Condition Status
+                  <span className="text-red-500 ml-1">*</span>
+                </label>
+                <select
+                  value={form.insurance?.conditionStatus ?? ""}
+                  onChange={(e) =>
+                    updateNested<InsuranceInput>(
+                      "insurance",
+                      "conditionStatus",
+                      e.target.value
+                    )
+                  }
+                  className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm hover:border-gray-400 transition"
+                >
+                  <option value="">Select Condition Status</option>
+                  <option value="Non-Structural">Non-Structural</option>
+                  <option value="Advanced Structural">
+                    Advanced Structural
+                  </option>
+                  <option value="Major Structural">Major Structural</option>
+                </select>
+              </div>
+
+              {/* Other Insurance Fields (Only if type === 'insurance') */}
+              {form.insuranceType === "insurance" &&
+                (Object.keys(form.insurance ?? {}) as (keyof InsuranceInput)[])
+                  .filter(
+                    (key) =>
+                      key !== "warrantyStatus" && key !== "conditionStatus"
+                  )
+                  .map((key) => {
+                    const labelMap: Record<string, string> = {
+                      type: "Type",
+                      insurerName: "Insurer Name",
+                      insuranceNo: "Insurance Number",
+                      insuranceEmail: "Insurance Email",
+                      claimNumber: "Claim Number",
+                      clerkRef: "Clerk Reference",
+                      assessor: "Assessor",
+                      assessorEmail: "Assessor Email",
+                      assessorNo: "Assessor Number",
+                      assessorCompany: "Assessor Company",
+                    };
+
+                    const placeholderMap: Record<string, string> = {
+                      type: "Enter Type",
+                      insurerName: "Enter Insurer Name",
+                      insuranceNo: "Enter Insurance Number",
+                      insuranceEmail: "Enter Email Address",
+                      claimNumber: "Enter Claim Number",
+                      clerkRef: "Enter Clerk Reference",
+                      assessor: "Enter Assessor Name",
+                      assessorEmail: "Enter Email Address",
+                      assessorNo: "Enter Assessor Number",
+                      assessorCompany: "Enter Assessor Company",
+                    };
+
+                    const isEmailField = key === "insuranceEmail";
+                    const EmailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+
+                    return (
                       <div key={key}>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          {key.charAt(0).toUpperCase() + key.slice(1)}
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                          {labelMap[key] ?? key}
+                          {isEmailField && (
+                            <span className="text-red-500 ml-1">*</span>
+                          )}
                         </label>
                         <input
+                          type="text"
+                          placeholder={
+                            placeholderMap[key] ??
+                            `Enter ${labelMap[key] ?? key}`
+                          }
                           value={form.insurance?.[key] ?? ""}
-                          onChange={(e) =>
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (
+                              isEmailField &&
+                              value &&
+                              !EmailRegex.test(value)
+                            ) {
+                              console.warn("Invalid email format");
+                            }
                             updateNested<InsuranceInput>(
                               "insurance",
                               key,
-                              e.target.value
-                            )
-                          }
-                          className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                              value
+                            );
+                          }}
+                          className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm hover:border-gray-400 transition placeholder-gray-400"
                         />
                       </div>
-                    )
-                  )}
-                </div>
-              )}
-            </>
+                    );
+                  })}
+            </div>
           )}
 
           {/* Step 4: Tow */}
           {step === 4 && (
             <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
                   Tow Needed
                 </label>
                 <select
@@ -280,7 +550,7 @@ export default function CreateClientPage() {
                   onChange={(e) =>
                     setForm({ ...form, towNeeded: e.target.value })
                   }
-                  className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none mb-6"
+                  className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm hover:border-gray-400 transition"
                 >
                   <option value="no">No</option>
                   <option value="yes">Yes</option>
@@ -290,20 +560,52 @@ export default function CreateClientPage() {
               {form.towNeeded === "yes" && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {(Object.keys(form.tow ?? {}) as (keyof TowInput)[]).map(
-                    (key) => (
-                      <div key={key}>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          {key.charAt(0).toUpperCase() + key.slice(1)}
-                        </label>
-                        <input
-                          value={form.tow?.[key] ?? ""}
-                          onChange={(e) =>
-                            updateNested<TowInput>("tow", key, e.target.value)
-                          }
-                          className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                        />
-                      </div>
-                    )
+                    (key) => {
+                      const labelMap: Record<string, string> = {
+                        towedBy: "Towed By",
+                        towContact: "Tow Contact",
+                        towEmail: "Tow Email",
+                        towingFee: "Towing Fee",
+                      };
+
+                      const placeholderMap: Record<string, string> = {
+                        towedBy: "Enter towing company/person name",
+                        towContact: "Enter contact number",
+                        towEmail: "Enter email address",
+                        towingFee: "Enter towing fee",
+                      };
+
+                      const isEmailField = key === "towEmail";
+                      const EmailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+
+                      return (
+                        <div key={key}>
+                          <label className="block text-sm font-semibold text-gray-700 mb-1">
+                            {labelMap[key] ?? key}
+                          </label>
+                          <input
+                            type={isEmailField ? "email" : "text"}
+                            placeholder={
+                              placeholderMap[key] ??
+                              `Enter ${labelMap[key] ?? key}`
+                            }
+                            value={form.tow?.[key] ?? ""}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (
+                                isEmailField &&
+                                value &&
+                                !EmailRegex.test(value)
+                              ) {
+                                console.warn("Invalid email format");
+                              }
+                              updateNested<TowInput>("tow", key, value);
+                            }}
+                            className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm hover:border-gray-400 transition placeholder-gray-400"
+                          />
+                        </div>
+                      );
+                    }
                   )}
                 </div>
               )}
