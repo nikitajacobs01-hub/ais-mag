@@ -45,6 +45,7 @@ export default function AccidentDetailPage() {
     { name: "QuickTow Services", whatsappNumber: "+27698053809" },
     { name: "Speedy Tow", whatsappNumber: "+27698053809" },
     { name: "Rapid Tow Co", whatsappNumber: "+27698053809" },
+    { name: "Eugene Towing", whatsappNumber: "+27740881414" },
   ];
 
   useEffect(() => {
