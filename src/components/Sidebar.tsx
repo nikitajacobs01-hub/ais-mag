@@ -8,6 +8,7 @@ import {
   UsersIcon,
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
+  LinkIcon,
 } from "@heroicons/react/24/outline";
 
 const menuItems = [
@@ -21,12 +22,22 @@ const menuItems = [
       { name: "View All Clients", path: "/dashboard/clients/list" },
     ],
   },
+  {
+    name: "Accidents",
+    icon: LinkIcon,
+    path: "/dashboard/accident",
+    submenu: [
+      { name: "View All", path: "/dashboard/accident" },
+      { name: "Create / Send Link", path: "/dashboard/accident/create" },
+    ],
+  },
+
   { name: "Profile", icon: UserIcon, path: "/dashboard/profile" },
   { name: "Settings", icon: Cog6ToothIcon, path: "/dashboard/settings" },
   {
     name: "Logout",
     icon: ArrowRightOnRectangleIcon,
-    path: "/dashboard/logout", // we'll handle this manually
+    path: "/dashboard/logout",
   },
 ];
 
@@ -35,19 +46,16 @@ export default function Sidebar() {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [clientsOpen, setClientsOpen] = useState(false);
+  const [accidentsOpen, setAccidentsOpen] = useState(false);
 
-  // Auto-expand Clients submenu if current path is a client page
   useEffect(() => {
-    if (pathname.startsWith("/dashboard/clients")) {
-      setClientsOpen(true);
-    } else {
-      setClientsOpen(false);
-    }
+    setClientsOpen(pathname.startsWith("/dashboard/clients"));
+    setAccidentsOpen(pathname.startsWith("/dashboard/accident"));
   }, [pathname]);
 
   const handleLogout = () => {
-    localStorage.clear(); // clear all storage
-    router.push("/"); // navigate to homepage
+    localStorage.clear();
+    router.push("/");
   };
 
   return (
@@ -86,7 +94,6 @@ export default function Sidebar() {
             const Icon = item.icon;
             const isActive = pathname.startsWith(item.path);
 
-            // Handle Logout separately
             if (item.name === "Logout") {
               return (
                 <button
@@ -100,20 +107,23 @@ export default function Sidebar() {
               );
             }
 
-            // If item has submenu
             if (item.submenu) {
+              const openState =
+                item.name === "Clients" ? clientsOpen : accidentsOpen;
+              const setOpenState =
+                item.name === "Clients" ? setClientsOpen : setAccidentsOpen;
+
               return (
                 <div key={item.name}>
                   <button
-                    onClick={() => setClientsOpen(!clientsOpen)}
+                    onClick={() => setOpenState(!openState)}
                     className={`flex items-center gap-3 p-2 w-full rounded hover:bg-white/10 transition
                       ${isActive ? "bg-white/20" : ""}`}
                   >
                     <Icon className="h-6 w-6" />
                     {sidebarOpen && <span>{item.name}</span>}
                   </button>
-                  {/* Submenu */}
-                  {clientsOpen && sidebarOpen && (
+                  {openState && sidebarOpen && (
                     <div className="ml-8 flex flex-col space-y-1 mt-1">
                       {item.submenu.map((sub) => (
                         <Link
