@@ -50,7 +50,9 @@ export default function AccidentDetailPage() {
   useEffect(() => {
     const fetchAccident = async () => {
       try {
-        const res = await fetch(`https://ais-backend.onrender.com/api/accidents/${id}`);
+        const res = await fetch(
+          `https://ais-backend.onrender.com/api/accidents/${id}`
+        );
         const data = await res.json();
         if (res.ok) setAccident(data);
         else console.error("Error fetching accident:", data.message);
@@ -64,39 +66,51 @@ export default function AccidentDetailPage() {
   }, [id]);
 
   const handleAssignTow = async () => {
-  if (!towCompany) return alert("Please select a tow company");
-  setAssigning(true);
-  try {
-    // Find selected tow company object from the array
-    const selected = towCompanies.find(tc => tc.name === towCompany);
-    if (!selected) return alert("Invalid tow company");
+    if (!towCompany) return alert("Please select a tow company");
+    setAssigning(true);
 
-    const res = await fetch(
-      `https://ais-backend.onrender.com/api/accidents/${id}/assign-tow`,
-      {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          towCompany: selected.name,
-          towWhatsapp: selected.whatsappNumber
-        }),
-      }
-    );
-    const data = await res.json();
-    if (res.ok) {
-      alert("Tow company assigned successfully!");
-      setAccident((prev) =>
-        prev && { ...prev, towCompanyAssigned: towCompany, status: "assigned" }
+    try {
+      // Find selected tow company object from the array
+      const selected = towCompanies.find((tc) => tc.name === towCompany);
+      if (!selected) return alert("Invalid tow company");
+
+      const res = await fetch(
+        `https://ais-backend.onrender.com/api/accidents/${id}/assign-tow`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            towCompany: selected.name,
+            towWhatsapp: selected.whatsappNumber,
+          }),
+        }
       );
-    } else alert(data.message || "Error assigning tow company");
-  } catch (err) {
-    console.error(err);
-    alert("Server error");
-  } finally {
-    setAssigning(false);
-  }
-};
 
+      const data = await res.json();
+
+      if (res.ok) {
+        alert("Tow company assigned successfully!");
+
+        setAccident((prev) =>
+          prev
+            ? { ...prev, towCompanyAssigned: selected.name, status: "assigned" }
+            : prev
+        );
+
+        // Open WhatsApp link if provided
+        if (data.waLink) {
+          window.open(data.waLink, "_blank");
+        }
+      } else {
+        alert(data.message || "Error assigning tow company");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Server error");
+    } finally {
+      setAssigning(false);
+    }
+  };
 
   const handleSendClientMessage = () => {
     if (!accident?.towCompanyAssigned) return;
@@ -104,7 +118,9 @@ export default function AccidentDetailPage() {
     // Build wa.me URL
     const clientNumber = accident.clientPhone.replace(/\D/g, ""); // sanitize
     const message = `Hello ${accident.clientName}, a tow company (${accident.towCompanyAssigned}) has been assigned to assist with your vehicle at ${accident.accidentLocation.address}.`;
-    const waUrl = `https://wa.me/${clientNumber}?text=${encodeURIComponent(message)}`;
+    const waUrl = `https://wa.me/${clientNumber}?text=${encodeURIComponent(
+      message
+    )}`;
     window.open(waUrl, "_blank");
     setSendingClientMessage(false);
   };
@@ -140,21 +156,25 @@ export default function AccidentDetailPage() {
       <div className="bg-white shadow rounded-lg p-6 space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <span className="font-semibold">Client Name:</span> {accident.clientName}
+            <span className="font-semibold">Client Name:</span>{" "}
+            {accident.clientName}
           </div>
           <div>
             <span className="font-semibold">Phone:</span> {accident.clientPhone}
           </div>
           {accident.clientEmail && (
             <div>
-              <span className="font-semibold">Email:</span> {accident.clientEmail}
+              <span className="font-semibold">Email:</span>{" "}
+              {accident.clientEmail}
             </div>
           )}
           <div>
-            <span className="font-semibold">Vehicle:</span> {accident.vehicleMake} {accident.vehicleModel}
+            <span className="font-semibold">Vehicle:</span>{" "}
+            {accident.vehicleMake} {accident.vehicleModel}
           </div>
           <div>
-            <span className="font-semibold">Location:</span> {accident.accidentLocation.address}
+            <span className="font-semibold">Location:</span>{" "}
+            {accident.accidentLocation.address}
           </div>
           <div>
             <span className="font-semibold">Status:</span>{" "}
@@ -171,13 +191,16 @@ export default function AccidentDetailPage() {
             </span>
           </div>
           <div>
-            <span className="font-semibold">Tow Company:</span> {accident.towCompanyAssigned || "-"}
+            <span className="font-semibold">Tow Company:</span>{" "}
+            {accident.towCompanyAssigned || "-"}
           </div>
           <div>
-            <span className="font-semibold">Insurance:</span> {accident.insuranceCompany || "-"}
+            <span className="font-semibold">Insurance:</span>{" "}
+            {accident.insuranceCompany || "-"}
           </div>
           <div className="md:col-span-2">
-            <span className="font-semibold">Description:</span> {accident.description || "-"}
+            <span className="font-semibold">Description:</span>{" "}
+            {accident.description || "-"}
           </div>
           <div className="md:col-span-2">
             <span className="font-semibold">Created At:</span>{" "}
@@ -244,7 +267,9 @@ export default function AccidentDetailPage() {
             >
               <option value="">Select a Tow Company</option>
               {towCompanies.map((c) => (
-                <option key={c.name} value={c.name}>{c.name}</option>
+                <option key={c.name} value={c.name}>
+                  {c.name}
+                </option>
               ))}
             </select>
             <button
