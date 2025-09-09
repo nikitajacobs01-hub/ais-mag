@@ -64,31 +64,39 @@ export default function AccidentDetailPage() {
   }, [id]);
 
   const handleAssignTow = async () => {
-    if (!towCompany) return alert("Please select a tow company");
-    setAssigning(true);
-    try {
-      const res = await fetch(
-        `https://ais-backend.onrender.com/api/accidents/${id}/assign-tow`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ towCompany }),
-        }
+  if (!towCompany) return alert("Please select a tow company");
+  setAssigning(true);
+  try {
+    // Find selected tow company object from the array
+    const selected = towCompanies.find(tc => tc.name === towCompany);
+    if (!selected) return alert("Invalid tow company");
+
+    const res = await fetch(
+      `https://ais-backend.onrender.com/api/accidents/${id}/assign-tow`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          towCompany: selected.name,
+          towWhatsapp: selected.whatsappNumber
+        }),
+      }
+    );
+    const data = await res.json();
+    if (res.ok) {
+      alert("Tow company assigned successfully!");
+      setAccident((prev) =>
+        prev && { ...prev, towCompanyAssigned: towCompany, status: "assigned" }
       );
-      const data = await res.json();
-      if (res.ok) {
-        alert("Tow company assigned successfully!");
-        setAccident((prev) =>
-          prev && { ...prev, towCompanyAssigned: towCompany, status: "assigned" }
-        );
-      } else alert(data.message || "Error assigning tow company");
-    } catch (err) {
-      console.error(err);
-      alert("Server error");
-    } finally {
-      setAssigning(false);
-    }
-  };
+    } else alert(data.message || "Error assigning tow company");
+  } catch (err) {
+    console.error(err);
+    alert("Server error");
+  } finally {
+    setAssigning(false);
+  }
+};
+
 
   const handleSendClientMessage = () => {
     if (!accident?.towCompanyAssigned) return;
@@ -101,25 +109,25 @@ export default function AccidentDetailPage() {
     setSendingClientMessage(false);
   };
 
-  const handleMarkCompleted = async () => {
-    if (!accident) return;
-    setCompleting(true);
-    try {
-      const res = await fetch(
-        `https://ais-backend.onrender.com/api/accidents/${id}/mark-completed`,
-        { method: "PATCH" }
-      );
-      if (res.ok) {
-        alert("Accident marked as completed");
-        setAccident((prev) => prev && { ...prev, status: "completed" });
-      } else alert("Error marking accident as completed");
-    } catch (err) {
-      console.error(err);
-      alert("Server error");
-    } finally {
-      setCompleting(false);
-    }
-  };
+  // const handleMarkCompleted = async () => {
+  //   if (!accident) return;
+  //   setCompleting(true);
+  //   try {
+  //     const res = await fetch(
+  //       `https://ais-backend.onrender.com/api/accidents/${id}/mark-completed`,
+  //       { method: "PATCH" }
+  //     );
+  //     if (res.ok) {
+  //       alert("Accident marked as completed");
+  //       setAccident((prev) => prev && { ...prev, status: "completed" });
+  //     } else alert("Error marking accident as completed");
+  //   } catch (err) {
+  //     console.error(err);
+  //     alert("Server error");
+  //   } finally {
+  //     setCompleting(false);
+  //   }
+  // };
 
   if (loading) return <p>Loading accident details...</p>;
   if (!accident) return <p>Accident not found.</p>;
