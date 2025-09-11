@@ -28,11 +28,11 @@ export default function AccidentFormPage() {
     },
   });
 
-  // New state for images
-  const [carRegistrationImage, setCarRegistrationImage] = useState<File | null>(null);
+  const [carRegistrationImage, setCarRegistrationImage] = useState<File | null>(
+    null
+  );
   const [accidentImages, setAccidentImages] = useState<File[]>([]);
 
-  // Validate token on load
   useEffect(() => {
     const validateToken = async () => {
       if (!token) return;
@@ -52,27 +52,19 @@ export default function AccidentFormPage() {
     validateToken();
   }, [token]);
 
-  // Fetch GPS location
   const fetchLocation = () => {
     if (!("geolocation" in navigator)) {
       setLocationError("⚠️ Geolocation not supported on this device.");
       return;
     }
-
     setLocationError(null);
-
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
-
         setFormData((prev) => ({
           ...prev,
-          accidentLocation: {
-            ...prev.accidentLocation,
-            lat,
-            lng,
-          },
+          accidentLocation: { ...prev.accidentLocation, lat, lng },
         }));
 
         try {
@@ -100,15 +92,14 @@ export default function AccidentFormPage() {
       },
       (error) => {
         console.error("Geolocation error:", error);
-
         let msg =
           "⚠️ Could not fetch location. Please enable GPS and try again.";
         if (error.code === 1)
           msg = "⚠️ Location permission denied. Enable GPS.";
         else if (error.code === 2)
-          msg = "⚠️ Position unavailable. Try going outside for better signal.";
-        else if (error.code === 3) msg = "⚠️ Location request timed out. Retry.";
-
+          msg = "⚠️ Position unavailable. Try going outside.";
+        else if (error.code === 3)
+          msg = "⚠️ Location request timed out. Retry.";
         setLocationError(msg);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -121,29 +112,27 @@ export default function AccidentFormPage() {
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  const handleCarRegistrationUpload = (
+    e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (e.target.files && e.target.files[0])
+      setCarRegistrationImage(e.target.files[0]);
   };
 
-  // Image upload handlers
-  const handleCarRegistrationUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) setCarRegistrationImage(e.target.files[0]);
-  };
-
-  const handleAccidentImagesUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAccidentImagesUpload = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
-      setAccidentImages((prev) => {
-        const combined = [...prev, ...newFiles].slice(0, 4); // max 4 images
-        return combined;
-      });
+      setAccidentImages((prev) => [...prev, ...newFiles].slice(0, 4));
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-
     try {
       const payload = new FormData();
       payload.append("token", token || "");
@@ -157,13 +146,17 @@ export default function AccidentFormPage() {
       payload.append("lng", formData.accidentLocation.lng.toString());
       payload.append("address", address || formData.accidentLocation.address);
 
-      if (carRegistrationImage) payload.append("carRegistrationImage", carRegistrationImage);
+      if (carRegistrationImage)
+        payload.append("carRegistrationImage", carRegistrationImage);
       accidentImages.forEach((file) => payload.append("accidentImages", file));
 
-      const res = await fetch("https://ais-backend.onrender.com/api/accident-form", {
-        method: "POST",
-        body: payload,
-      });
+      const res = await fetch(
+        "https://ais-backend.onrender.com/api/accident-form",
+        {
+          method: "POST",
+          body: payload,
+        }
+      );
 
       const data = await res.json();
       if (res.ok) alert("✅ Accident report submitted successfully");
@@ -183,7 +176,7 @@ export default function AccidentFormPage() {
     <div className="max-w-md mx-auto bg-white shadow rounded-xl p-6 mt-10">
       <h1 className="text-xl font-semibold mb-4">Accident Report Form</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Original Fields */}
+        {/* Fields */}
         <div>
           <label className="block text-sm font-medium">Full Name</label>
           <input
@@ -233,7 +226,9 @@ export default function AccidentFormPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium">Accident Description</label>
+          <label className="block text-sm font-medium">
+            Accident Description
+          </label>
           <textarea
             name="accidentDescription"
             value={formData.accidentDescription}
@@ -244,7 +239,9 @@ export default function AccidentFormPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium">Insurance Company (optional)</label>
+          <label className="block text-sm font-medium">
+            Insurance Company (optional)
+          </label>
           <input
             type="text"
             name="insuranceCompany"
@@ -268,7 +265,8 @@ export default function AccidentFormPage() {
           </div>
         ) : (
           <p className="text-sm text-gray-600">
-            📍 Location: {formData.accidentLocation.lat}, {formData.accidentLocation.lng}
+            📍 Location: {formData.accidentLocation.lat},{" "}
+            {formData.accidentLocation.lng}
             <br />
             🏠 Address: {address || "Fetching..."}
           </p>
@@ -276,7 +274,9 @@ export default function AccidentFormPage() {
 
         {locationError && (
           <div>
-            <label className="block text-sm font-medium">Enter Address Manually</label>
+            <label className="block text-sm font-medium">
+              Enter Address Manually
+            </label>
             <input
               type="text"
               value={address}
@@ -287,9 +287,11 @@ export default function AccidentFormPage() {
           </div>
         )}
 
-        {/* New Image Fields */}
+        {/* Images */}
         <div>
-          <label className="block text-sm font-medium">Car Registration Image</label>
+          <label className="block text-sm font-medium">
+            Car Registration Image
+          </label>
           <input
             type="file"
             accept="image/*"
@@ -306,7 +308,9 @@ export default function AccidentFormPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium">Accident Images (max 4)</label>
+          <label className="block text-sm font-medium">
+            Accident Images (max 4)
+          </label>
           <input
             type="file"
             accept="image/*"
@@ -329,11 +333,30 @@ export default function AccidentFormPage() {
         <button
           type="submit"
           disabled={submitting}
-          className="bg-[#021024] text-white px-4 py-2 rounded hover:bg-[#032040]"
+          className="bg-[#021024] text-white px-4 py-2 rounded hover:bg-[#032040] w-full"
         >
           {submitting ? "Submitting..." : "Submit Report"}
         </button>
       </form>
+
+      {/* Contact Info Section */}
+      <div className="mt-8 border-t pt-6 text-center">
+        <h2 className="text-lg font-bold text-[#021024]">
+          📞 Contact MAG Selby
+        </h2>
+        <p className="mt-2 text-base font-semibold">010-591-7550</p>
+        <p className="mt-1 text-sm">
+          <a
+            href="mailto:info@motoraccidentgroup.co.za"
+            className="text-blue-600 underline"
+          >
+            info@motoraccidentgroup.co.za
+          </a>
+        </p>
+        <p className="mt-1 text-sm text-gray-700">
+          80 Booysens Road, Selby, Johannesburg, 2001
+        </p>
+      </div>
     </div>
   );
 }

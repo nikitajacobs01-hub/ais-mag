@@ -5,13 +5,27 @@ import { useState } from "react";
 export default function AccidentLinkPage() {
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
-    phone: "",
+    phone: "+27", // auto-prefill with +27
   });
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value;
+
+    // Always enforce +27 prefix
+    if (!value.startsWith("+27")) {
+      value = "+27" + value.replace(/^\+?0*/, ""); // strip leading + or 0’s
+    }
+
+    // If user typed +270, remove the 0
+    if (value.startsWith("+270")) {
+      value = "+27" + value.slice(4);
+    }
+
+    // Remove all non-digits except +
+    value = "+27" + value.slice(3).replace(/\D/g, "");
+
+    setFormData({ ...formData, phone: value });
   };
 
   const handleSendLink = async (e: React.FormEvent) => {
@@ -19,15 +33,28 @@ export default function AccidentLinkPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("https://ais-backend.onrender.com/api/accident-link", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+      // Validate SA number length (should be +27 + 9 digits)
+      const saNumberRegex = /^\+27\d{9}$/;
+      if (!saNumberRegex.test(formData.phone)) {
+        alert(
+          "Please enter a valid South African cellphone number (e.g., +27821234567)."
+        );
+        setLoading(false);
+        return;
+      }
+
+      const res = await fetch(
+        "https://ais-backend.onrender.com/api/accident-link",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        }
+      );
+
       const data = await res.json();
 
       if (res.ok) {
-        // Open WhatsApp link
         window.open(data.waLink, "_blank");
       } else {
         alert(data.message || "Error sending link");
@@ -50,18 +77,7 @@ export default function AccidentLinkPage() {
             type="text"
             name="name"
             value={formData.name}
-            onChange={handleChange}
-            required
-            className="w-full border rounded p-2"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium">Email</label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             required
             className="w-full border rounded p-2"
           />
@@ -72,11 +88,13 @@ export default function AccidentLinkPage() {
             type="tel"
             name="phone"
             value={formData.phone}
-            onChange={handleChange}
+            onChange={handlePhoneChange}
             required
-            placeholder="+27831234567"
             className="w-full border rounded p-2"
           />
+          <p className="text-xs text-gray-500 mt-1">
+            Format: +27821234567 (South Africa)
+          </p>
         </div>
         <button
           type="submit"

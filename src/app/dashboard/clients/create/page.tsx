@@ -17,13 +17,13 @@ export default function CreateClientPage() {
   const [message, setMessage] = useState("");
   const [step, setStep] = useState(1);
 
-  // ✅ NEW: success modal state
+  // Success modal state
   const [showSuccess, setShowSuccess] = useState(false);
   const [successText, setSuccessText] = useState(
     "✅ Client with all details added successfully!"
   );
 
-  //Regex patterns
+  // Regex patterns
   const EmailRegex = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/;
   const IdNumberRegex =
     /^([0-9]{2})(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])[0-9]{4}[01][8][0-9]$/;
@@ -36,11 +36,11 @@ export default function CreateClientPage() {
     idNumber: "",
     dob: "",
     email: "",
-    cellphone: "", // ✅ added
+    cellphone: "",
     street: "",
     suburb: "",
     city: "",
-    branch: "", // ✅ added
+    branch: "",
     vehicles: [
       {
         registration: "",
@@ -77,12 +77,8 @@ export default function CreateClientPage() {
       towingFee: "",
     },
   });
-  const branches = [
-    "MAG Selby",
-    "MAG The Glen",
-    "MAG Longmeadow",
-    "MAG Pretoria",
-  ];
+
+  const branches = ["MAG Selby", "MAG The Glen", "MAG Longmeadow", "MAG Pretoria"];
 
   const updateNested = <T extends object>(
     section: keyof ClientCreateInput,
@@ -108,8 +104,6 @@ export default function CreateClientPage() {
       await api.post("/api/clients", form);
       const successMsg = "✅ Client with all details added successfully!";
       setMessage(successMsg);
-
-      // ✅ NEW: show modal + message
       setSuccessText(successMsg);
       setShowSuccess(true);
     } catch (error: unknown) {
@@ -133,8 +127,6 @@ export default function CreateClientPage() {
           <h1 className="text-4xl font-extrabold text-gray-800">
             Create New Client
           </h1>
-
-          {/* ✅ NEW: Navigate to Clients List button */}
           <button
             type="button"
             onClick={() => router.push("/dashboard/clients/list")}
@@ -184,7 +176,6 @@ export default function CreateClientPage() {
           </div>
         </div>
 
-        {/* Form */}
         <form
           onSubmit={handleSubmit}
           className="bg-white p-8 rounded-2xl shadow-xl space-y-8"
@@ -236,6 +227,13 @@ export default function CreateClientPage() {
                 const isId = field === "idNumber";
                 const isPhone = field === "cellphone";
 
+                const isRequiredField = [
+                  "firstName",
+                  "lastName",
+                  "idNumber",
+                  "cellphone",
+                ].includes(field);
+
                 return (
                   <div key={field}>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -250,7 +248,9 @@ export default function CreateClientPage() {
                         onChange={(e) =>
                           setForm({ ...form, [field]: e.target.value })
                         }
-                        className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        className={`border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none ${
+                          isRequiredField ? "bg-yellow-100" : ""
+                        }`}
                       />
                     ) : field === "branch" ? (
                       <select
@@ -258,7 +258,9 @@ export default function CreateClientPage() {
                         onChange={(e) =>
                           setForm({ ...form, [field]: e.target.value })
                         }
-                        className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        className={`border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none ${
+                          isRequiredField ? "bg-yellow-100" : ""
+                        }`}
                       >
                         <option value="">{placeholderMap[field]}</option>
                         {branches.map((branch) => (
@@ -274,7 +276,6 @@ export default function CreateClientPage() {
                         value={form[field] ?? ""}
                         onChange={(e) => {
                           const value = e.target.value;
-                          // ✅ inline regex validation
                           if (isEmail && value && !EmailRegex.test(value)) {
                             console.warn("Invalid email format");
                           }
@@ -286,7 +287,9 @@ export default function CreateClientPage() {
                           }
                           setForm({ ...form, [field]: value });
                         }}
-                        className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        className={`border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none ${
+                          isRequiredField ? "bg-yellow-100" : ""
+                        }`}
                       />
                     )}
                   </div>
@@ -294,13 +297,13 @@ export default function CreateClientPage() {
               })}
             </div>
           )}
+
           {/* Step 2: Vehicle */}
           {step === 2 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {(
                 Object.keys(form.vehicles?.[0] ?? {}) as (keyof VehicleInput)[]
               ).map((key) => {
-                // Human-readable labels
                 const labelMap: Record<string, string> = {
                   registration: "Registration Number",
                   vin: "VIN",
@@ -313,14 +316,13 @@ export default function CreateClientPage() {
                   quoteDate: "Quote Date",
                 };
 
-                // Required fields
                 const requiredFields: (keyof VehicleInput)[] = [
                   "registration",
-                  "engineNo",
+                  "vin",
+                  "make",
                   "modelName",
                 ];
 
-                // Dropdown for Make
                 const carMakes = [
                   "Toyota",
                   "Volkswagen",
@@ -341,9 +343,8 @@ export default function CreateClientPage() {
                   "Volvo",
                 ];
 
-                // Check if field is a date type
-                const isDateField =
-                  key === "bookingDate" || key === "quoteDate";
+                const isDateField = key === "bookingDate" || key === "quoteDate";
+                const isRequiredField = requiredFields.includes(key);
 
                 return (
                   <div key={key}>
@@ -363,7 +364,9 @@ export default function CreateClientPage() {
                           )
                         }
                         required={requiredFields.includes(key)}
-                        className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        className={`border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none ${
+                          isRequiredField ? "bg-yellow-100" : ""
+                        }`}
                       >
                         <option value="">Select Make</option>
                         {carMakes.map((make) => (
@@ -386,7 +389,9 @@ export default function CreateClientPage() {
                           )
                         }
                         required={requiredFields.includes(key)}
-                        className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        className={`border border-gray-300 rounded-lg px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none ${
+                          isRequiredField ? "bg-yellow-100" : ""
+                        }`}
                       />
                     )}
                   </div>
@@ -394,6 +399,7 @@ export default function CreateClientPage() {
               })}
             </div>
           )}
+
           {/* Step 3: Insurance */}
           {step === 3 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -456,14 +462,12 @@ export default function CreateClientPage() {
                 >
                   <option value="">Select Condition Status</option>
                   <option value="Non-Structural">Non-Structural</option>
-                  <option value="Advanced Structural">
-                    Advanced Structural
-                  </option>
+                  <option value="Advanced Structural">Advanced Structural</option>
                   <option value="Major Structural">Major Structural</option>
                 </select>
               </div>
 
-              {/* Other Insurance Fields (Only if type === 'insurance') */}
+              {/* Other Insurance Fields */}
               {form.insuranceType === "insurance" &&
                 (Object.keys(form.insurance ?? {}) as (keyof InsuranceInput)[])
                   .filter(
@@ -557,117 +561,66 @@ export default function CreateClientPage() {
                 </select>
               </div>
 
-              {form.towNeeded === "yes" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {(Object.keys(form.tow ?? {}) as (keyof TowInput)[]).map(
-                    (key) => {
-                      const labelMap: Record<string, string> = {
-                        towedBy: "Towed By",
-                        towContact: "Tow Contact",
-                        towEmail: "Tow Email",
-                        towingFee: "Towing Fee",
-                      };
-
-                      const placeholderMap: Record<string, string> = {
-                        towedBy: "Enter towing company/person name",
-                        towContact: "Enter contact number",
-                        towEmail: "Enter email address",
-                        towingFee: "Enter towing fee",
-                      };
-
-                      const isEmailField = key === "towEmail";
-                      const EmailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
-
-                      return (
-                        <div key={key}>
-                          <label className="block text-sm font-semibold text-gray-700 mb-1">
-                            {labelMap[key] ?? key}
-                          </label>
-                          <input
-                            type={isEmailField ? "email" : "text"}
-                            placeholder={
-                              placeholderMap[key] ??
-                              `Enter ${labelMap[key] ?? key}`
-                            }
-                            value={form.tow?.[key] ?? ""}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              if (
-                                isEmailField &&
-                                value &&
-                                !EmailRegex.test(value)
-                              ) {
-                                console.warn("Invalid email format");
-                              }
-                              updateNested<TowInput>("tow", key, value);
-                            }}
-                            className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm hover:border-gray-400 transition placeholder-gray-400"
-                          />
-                        </div>
-                      );
-                    }
-                  )}
-                </div>
-              )}
+              {form.towNeeded === "yes" &&
+                (Object.keys(form.tow ?? {}) as (keyof TowInput)[]).map(
+                  (key) => {
+                    const labelMap: Record<string, string> = {
+                      towedBy: "Towed By",
+                      towContact: "Tow Contact",
+                      towEmail: "Tow Email",
+                      towingFee: "Towing Fee",
+                    };
+                    return (
+                      <div key={key} className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          {labelMap[key] ?? key}
+                        </label>
+                        <input
+                          type="text"
+                          value={form.tow?.[key] ?? ""}
+                          onChange={(e) =>
+                            updateNested<TowInput>("tow", key, e.target.value)
+                          }
+                          className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm hover:border-gray-400 transition"
+                        />
+                      </div>
+                    );
+                  }
+                )}
             </>
           )}
 
-          {/* Navigation */}
-          <div className="flex justify-between mt-8 flex-wrap gap-4">
+          {/* Navigation buttons */}
+          <div className="flex justify-between mt-8">
             {step > 1 && (
               <button
                 type="button"
                 onClick={prevStep}
-                className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg shadow hover:bg-gray-300 transition"
+                className="px-6 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
               >
                 Previous
               </button>
             )}
-
-            {step < 4 && (
+            {step < stepLabels.length && (
               <button
                 type="button"
                 onClick={nextStep}
-                className="ml-auto px-6 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-500 transition"
+                className="ml-auto px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
               >
                 Next
               </button>
             )}
-
-            {step === 4 && (
+            {step === stepLabels.length && (
               <button
                 type="submit"
-                className="ml-auto px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow hover:bg-green-500 transition"
+                className="ml-auto px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
               >
-                Save Client
+                Submit
               </button>
             )}
           </div>
         </form>
       </div>
-
-      {/* ✅ NEW: Success Modal */}
-      {showSuccess && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-[1px] flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-            <div className="text-center">
-              <div className="mx-auto mb-3 w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-                <span className="text-2xl">✅</span>
-              </div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-2">
-                Success
-              </h2>
-              <p className="text-gray-600 mb-6">{successText}</p>
-              <button
-                onClick={() => router.push("/dashboard/clients/list")}
-                className="px-6 py-2.5 bg-green-600 text-white rounded-lg shadow hover:bg-green-500 transition"
-              >
-                OK
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
